@@ -52,7 +52,7 @@ batch_size = 32
 
 
 def run_episode(agent, env, rpm):
-    obs = getState_baseline(transition_time)
+    obs,_,_ = getState_baseline(transition_time)
 
     counter = 0
 
