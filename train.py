@@ -28,7 +28,7 @@ BATCH_SIZE = 128
 REWARD_SCALE = 0.1  # reward 缩放系数
 NOISE = 1.05  # 动作噪声方差
 
-TRAIN_EPISODE = 100000  # 训练的总episode数
+TRAIN_EPISODE = 1000  # 训练的总episode数
 
 num_episode = 16
 discount_factor = 0.9
@@ -67,14 +67,13 @@ def run_episode(agent, env, rpm):
         # 增加探索扰动, 输出限制在 [-1.0, 1.0] 范围内
 
         action = np.random.normal(action, NOISE)
-        #print(action.shape)
+        # print(action.shape)
+        counter += 1
         print("Inside episode counter", counter)
 
         if traci.simulation.getMinExpectedNumber() <= 0:
             traci.load(["--start", "-c", "data/cross.sumocfg",
                         "--tripinfo-output", "tripinfo.xml"])
-
-        obs = getState_baseline(transition_time)
 
         queueLength = getQueueLength()
         next_obs = makeMove(action, transition_time)
