@@ -67,7 +67,7 @@ def run_episode(agent, env, rpm):
         # 增加探索扰动, 输出限制在 [-1.0, 1.0] 范围内
 
         action = np.random.normal(action, NOISE)
-        print(action.shape)
+        #print(action.shape)
         print("Inside episode counter", counter)
 
         if traci.simulation.getMinExpectedNumber() <= 0:
