@@ -100,14 +100,13 @@ def generate_routefile_random(episode_length, total_vehicles):
         for i in np.arange(len(traffic)):
             print(
                 '<flow id="mixed%i" begin="0" end="%i" number="%i" route="r%i" type="mixed" departLane="random" departPosLat="random"/>' % (
-                    i, episode_length, traffic[i], i), file=routes)
+                i, episode_length, traffic[i], i), file = routes)
 
         print("</routes>", file=routes)
 
     print('TRAFFIC CONFIGURATION - ')
     for i in np.arange(len(traffic)):
-        print('Lane %i - %i' % (i + 1, traffic[i]))
-
+        print('Lane %i - %i' % (i+1, traffic[i]))
 
 # The program looks like this
 #    <tlLogic id="0" type="static" programID="0" offset="0">
@@ -338,10 +337,11 @@ def generate_routefile(left_qty, up_qty):
     <vehicle id='passenger198' type='passenger' route='r6' depart='200'/>
     <vehicle id='passenger199' type='passenger' route='r7' depart='200'/>
 </routes>
+
+
 """, file=routes)
         lastVeh = 0
         vehNr = 0
-
 
 options = get_options()
 
@@ -376,36 +376,82 @@ def getPhaseState(transition_time):
     num_lanes = 4
     num_phases = 4
     phase = traci.trafficlight.getPhase("0")
-    phaseState = np.zeros((transition_time, num_lanes, num_phases))
+    phaseState = np.zeros((transition_time,num_lanes,num_phases))
     for i in range(transition_time):
         for j in range(num_lanes):
             phaseState[i][j][phase] = 1
     return phaseState
 
-
 def getPhaseState_baseline():
     num_phases = 4
     phase = traci.trafficlight.getPhase("0")
-    phaseState = np.zeros((10, 24, num_phases))
+    phaseState = np.zeros((10,24,num_phases))
     for i in range(10):
         for j in range(24):
             phaseState[i][j][phase] = 1
     return phaseState
 
-
 def getState_baseline(transition_time):
+    avg_qlength = 0
+    avg_leftcount = 0
+    avg_rightcount = 0
+    avg_bottomcount = 0
+    avg_topcount = 0
     for _ in range(transition_time):
         traci.simulationStep()
 
+        leftcount = 0
+        rightcount = 0
+        topcount = 0
+        bottomcount = 0
+        vehicleList = traci.vehicle.getIDList()
+
+        print("Traffic : ")
+
+        for id in vehicleList:
+            x, y = traci.vehicle.getPosition(id)
+
+            if x < 110 and x > 60 and y < 130 and y > 120:
+                leftcount += 1
+            else:
+                if x < 120 and x > 110 and y < 110 and y > 600:
+                    bottomcount += 1
+                else:
+                    if x < 180 and x > 130 and y < 120 and y > 110:
+                        rightcount += 1
+                    else:
+                        if x < 130 and x > 120 and y < 180 and y > 130:
+                            topcount += 1
+
+        print("Left : ", leftcount)
+        print("Right : ", rightcount)
+        print("Top : ", topcount)
+        print("Bottom : ", bottomcount)
+
+        avg_topcount += topcount
+        avg_bottomcount += bottomcount
+        avg_leftcount += leftcount
+        avg_rightcount += rightcount
+
+        avg_qlength += ((bottomcount + rightcount + topcount + leftcount) / 4)
+
+    avg_qlength /= transition_time
+    avg_leftcount /= transition_time
+    avg_topcount /= transition_time
+    avg_rightcount /= transition_time
+    avg_bottomcount /= transition_time
+
+    avg_lane_qlength = [avg_leftcount, avg_topcount, avg_rightcount, avg_bottomcount]
+
     vehicleList = traci.vehicle.getIDList()
-    leftPositionVector = np.zeros((10, 6))
-    leftVelocityVector = np.zeros((10, 6))
-    topPositionVector = np.zeros((10, 6))
-    topVelocityVector = np.zeros((10, 6))
-    rightPositionVector = np.zeros((10, 6))
-    rightVelocityVector = np.zeros((10, 6))
-    bottomPositionVector = np.zeros((10, 6))
-    bottomVelocityVector = np.zeros((10, 6))
+    leftPositionVector = np.zeros((10,6))
+    leftVelocityVector = np.zeros((10,6))
+    topPositionVector = np.zeros((10,6))
+    topVelocityVector = np.zeros((10,6))
+    rightPositionVector = np.zeros((10,6))
+    rightVelocityVector = np.zeros((10,6))
+    bottomPositionVector = np.zeros((10,6))
+    bottomVelocityVector = np.zeros((10,6))
 
     for id in vehicleList:
         x, y = traci.vehicle.getPosition(id)
@@ -442,15 +488,12 @@ def getState_baseline(transition_time):
                         topPositionVector[y_norm][x_norm] = 1
                         topVelocityVector[y_norm][x_norm] = traci.vehicle.getSpeed(id)
 
-    positionVector = np.concatenate((topPositionVector, rightPositionVector, bottomPositionVector, leftPositionVector),
-                                    1)
-    velocityVector = np.concatenate((topVelocityVector, rightVelocityVector, bottomVelocityVector, leftVelocityVector),
-                                    1)
+    positionVector = np.concatenate((topPositionVector, rightPositionVector, bottomPositionVector, leftPositionVector), 1)
+    velocityVector = np.concatenate((topVelocityVector, rightVelocityVector, bottomVelocityVector, leftVelocityVector), 1)
     phaseVector = getPhaseState_baseline()
-    newState = np.dstack((positionVector, velocityVector, phaseVector))
-    newState = np.expand_dims(newState, axis=0).ravel()
-
-    return newState
+    newState = np.dstack((positionVector,velocityVector,phaseVector))
+    newState = np.expand_dims(newState, axis=0)
+    return newState, avg_qlength, avg_lane_qlength
 
 
 def getQueueLength():
@@ -494,7 +537,6 @@ def getQueueLength():
              ]
     return state
 
-
 def getState(transition_time):  # made the order changes
     newState = []
     # transition_time_step_leftcount = 0
@@ -503,6 +545,9 @@ def getState(transition_time):  # made the order changes
     # transition_time_step_bottomcount = 0
     for _ in range(transition_time):
         traci.simulationStep()
+
+
+
 
         leftcount = 0
         rightcount = 0
@@ -527,10 +572,10 @@ def getState(transition_time):  # made the order changes
                         if x < 130 and x > 120 and y < 180 and y > 130:
                             topcount += 1
 
-        # print("Left : ", leftcount)
-        # print("Right : ", rightcount)
-        # print("Top : ", topcount)
-        # print("Bottom : ", bottomcount)
+        print("Left : ", leftcount)
+        print("Right : ", rightcount)
+        print("Top : ", topcount)
+        print("Bottom : ", bottomcount)
 
         # transition_time_step_bottomcount+= bottomcount
         # transition_time_step_leftcount+= leftcount
@@ -542,6 +587,7 @@ def getState(transition_time):  # made the order changes
                  topcount / 40,
                  leftcount / 40
                  ]
+
 
         newState.insert(0, state)
     # print (state)
@@ -558,9 +604,13 @@ def getState(transition_time):  # made the order changes
 print("here")
 
 
+
 def makeMove(action, transition_time):
     if action.any() == 1:
         traci.trafficlight.setPhase("0", (int(traci.trafficlight.getPhase("0")) + 1) % 4)
+
+
+
 
     # traci.simulationStep()
     # traci.simulationStep()
@@ -606,7 +656,6 @@ def getReward(this_state, this_new_state):
 
     return this_reward
 
-
 def getRewardAbsolute(this_state, this_new_state):
     num_lanes = 4
     qLengths1 = []
@@ -634,6 +683,21 @@ def getRewardAbsolute(this_state, this_new_state):
     this_reward_cubic = this_reward * this_reward * this_reward
 
     return this_reward_cubic
+
+
+def build_model(transition_time):
+    num_hidden_units_cnn = 10
+    num_actions = 2
+    model = Sequential()
+    model.add(Conv2D(num_hidden_units_cnn, kernel_size=(10, 6), strides=6, activation='relu', input_shape=(10, 24, 6)))
+    # model.add(LSTM(8))
+    model.add(Flatten())
+    model.add(Dense(20, activation='relu'))
+    model.add(Dense(num_actions, activation='linear'))
+    opt = RMSprop(lr=0.00025)
+    model.compile(loss='mse', optimizer=opt)
+
+    return model
 
 
 def getWaitingTime(laneID):

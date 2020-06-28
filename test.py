@@ -15,7 +15,7 @@ from replay_memory import ReplayMemory
 import os
 import sys
 from parl.algorithms import DDPG
-from make_env import *
+from make_test_env import *
 from operator import add
 
 num_episode = 1
