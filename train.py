@@ -24,7 +24,7 @@ GAMMA = 0.99  # reward 的衰减因子
 TAU = 0.001  # 软更新的系数
 MEMORY_SIZE = int(1e4)  # 经验池大小
 MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20  # 预存一部分经验之后再开始训练
-BATCH_SIZE = 128
+BATCH_SIZE = 32
 REWARD_SCALE = 0.1  # reward 缩放系数
 NOISE = 0.05  # 动作噪声方差
 
@@ -127,24 +127,7 @@ def run_episode(agent, env, rpm):
 
 
 
-        same_action_count = 0
-        for temp in rpm.buffer:
-            print(np.argmax(temp[1]))
-            if np.argmax(temp[1]) == 0:
-                same_action_count += 1
-            else:
-                break
-        if same_action_count == 20:
-            act[0] = 0
-            act[1] = 1
-            action = 1
-            print("SAME ACTION PENALTY")
 
-        else:
-            print("POLICY FOLLOWED ")
-        print("real_act:",act)
-
-        print("real_action:", action)
 
         queueLength = getQueueLength()
         next_obs = makeMove(action, transition_time)
@@ -159,6 +142,8 @@ def run_episode(agent, env, rpm):
         if len(rpm) > MEMORY_WARMUP_SIZE:
             (batch_obs, batch_action, batch_reward, batch_next_obs,
              batch_done) = rpm.sample(BATCH_SIZE)
+
+
 
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
                         batch_done)
@@ -225,7 +210,7 @@ def main():
     # 往经验池中预存数据
     while len(rpm) < MEMORY_WARMUP_SIZE:
 
-        run_episode(agent, env, rpm)
+        save_data(agent, env, rpm)
 
     episode = 0
     while episode < TRAIN_EPISODE:
