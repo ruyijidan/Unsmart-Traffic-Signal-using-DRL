@@ -69,9 +69,9 @@ def save_data(agent, env, rpm):
     new_queueLength = getQueueLength()
     reward = getReward(queueLength,new_queueLength)
     done = traci.simulation.getMinExpectedNumber()
-    # print("save_data:-----------------------------")
-    # print(obs.shape, q_val.shape)
-    # print(action)
+    print("save_data:-----------------------------")
+    print(obs.shape, q_val.shape)
+    print(q_val)
 
     rpm.append((obs, q_val, REWARD_SCALE * reward, next_obs, done))
 
@@ -100,10 +100,16 @@ def run_episode(agent, env, rpm):
         steps += 1
         # batch_obs = np.expand_dims(obs, axis=0)
 
+
         act = agent.predict(obs.astype('float32'))
 
+        policy_s = np.ones(nA) * 0.9 / nA
+        policy_s[np.argmax(act)] = 1 - 0.9 + (0.9 / nA)
+        action = np.random.choice(np.arange(nA), p=policy_s)
+
+
         #action = np.random.choice(np.arange(nA), p=act)
-        action = np.argmax(act)
+        action = np.argmax(action)
         print("==========================")
         print(act)
         print(action)
@@ -124,6 +130,24 @@ def run_episode(agent, env, rpm):
 
         #action = np.random.choice(np.arange(nA), p=policy_s)
 
+        # same_action_count = 0
+        # for temp in rpm.buffer:
+        #     print(np.argmax(temp[1]))
+        #     if np.argmax(temp[1]) == 0:
+        #         same_action_count += 1
+        #     else:
+        #         break
+        # if same_action_count == 20:
+        #     act[0] = 0
+        #     act[1] = 1
+        #     action = 1
+        #     print("SAME ACTION PENALTY")
+        #
+        # else:
+        #     print("POLICY FOLLOWED ")
+        # print("real_act:", act)
+        #
+        # print("real_action:", action)
 
 
 
@@ -136,6 +160,9 @@ def run_episode(agent, env, rpm):
         reward = getReward(queueLength, new_queueLength)
         done = traci.simulation.getMinExpectedNumber()
         # action = [action]  # 方便存入replaymemory
+
+
+
 
         rpm.append((obs, act, REWARD_SCALE * reward, next_obs, done))
 

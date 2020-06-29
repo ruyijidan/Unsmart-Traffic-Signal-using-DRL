@@ -43,6 +43,7 @@ class Agent(parl.Agent):
             self.pred_program, feed={'obs': obs},
             fetch_list=[self.pred_act])[0]
         act = np.squeeze(act)
+        act = np.argmax(act)
         return act
 
     def learn(self, obs, act, reward, next_obs, terminal):
