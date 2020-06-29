@@ -606,7 +606,7 @@ print("here")
 
 
 def makeMove(action, transition_time):
-    if action.any() == 1:
+    if np.argmax(action) == 1:
         traci.trafficlight.setPhase("0", (int(traci.trafficlight.getPhase("0")) + 1) % 4)
 
 

@@ -22,6 +22,8 @@ class ReplayMemory(object):
             next_obs_batch.append(s_p)
             done_batch.append(done)
 
+        #print(np.array(action_batch).astype('float32'))
+
         return np.array(obs_batch).astype('float32'), \
             np.array(action_batch).astype('float32'), np.array(reward_batch).astype('float32'),\
             np.array(next_obs_batch).astype('float32'), np.array(done_batch).astype('float32')

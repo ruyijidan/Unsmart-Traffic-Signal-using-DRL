@@ -49,32 +49,78 @@ target_update_time = 20
 replay_memory_init_size = 350
 replay_memory_size = 8000
 batch_size = 32
+nA = 2
+
+def save_data(agent, env, rpm):
+
+    if traci.simulation.getMinExpectedNumber() <= 0:
+        traci.load(["--start", "-c", "data/cross.sumocfg",
+                    "--tripinfo-output", "tripinfo.xml"])
+    obs = getState_baseline(transition_time)
+    queueLength = getQueueLength()
+
+    q_val= np.random.rand(2,)
+
+    policy_s = np.ones(nA) * 0.9 / nA
+    policy_s[np.argmax(q_val)] = 1 - 0.9 + (0.9 / nA)
+    action = np.random.choice(np.arange(nA), p=policy_s)
+
+    next_obs = makeMove(action,transition_time)
+    new_queueLength = getQueueLength()
+    reward = getReward(queueLength,new_queueLength)
+    done = traci.simulation.getMinExpectedNumber()
+    # print("save_data:-----------------------------")
+    # print(obs.shape, q_val.shape)
+    # print(action)
+
+    rpm.append((obs, q_val, REWARD_SCALE * reward, next_obs, done))
+
+
+
+
+
 
 
 def run_episode(agent, env, rpm):
+    traci.load(["--start", "-c", "data/cross.sumocfg",
+                "--tripinfo-output", "tripinfo.xml"])
+    traci.trafficlight.setPhase("0", 0)
+
     obs = getState_baseline(transition_time)
 
     counter = 0
 
     total_reward = 0
     steps = 0
-
-    while True:
+    total_t = 0
+    nA = 2
+    while traci.simulation.getMinExpectedNumber() > 0:
+        counter += 1
+        total_t += 1
         steps += 1
         # batch_obs = np.expand_dims(obs, axis=0)
-        action = agent.predict(obs.astype('float32'))
+
+        act = agent.predict(obs.astype('float32'))
+        action = np.argmax(act)
+        print("==========================")
+        print(act)
+        print(action)
+        print("Inside episode counter", counter)
 
         # 增加探索扰动, 输出限制在 [-1.0, 1.0] 范围内
 
-        action = np.random.normal(action, NOISE)
-        print(action.shape)
-        print("Inside episode counter", counter)
+        # action = np.random.normal(action, NOISE)
 
-        if traci.simulation.getMinExpectedNumber() <= 0:
-            traci.load(["--start", "-c", "data/cross.sumocfg",
-                        "--tripinfo-output", "tripinfo.xml"])
 
-        obs = getState_baseline(transition_time)
+
+        # epsilon = epsilons[min(total_t, epsilon_decay_steps - 1)]
+        # print("Epsilon -", epsilon)
+        # policy_s = np.ones(nA) * epsilon / nA
+        #
+        # policy_s[np.argmax(obs)] = 1 - epsilon + (epsilon / nA)
+
+        #action = np.random.choice(np.arange(nA), p=policy_s)
+
 
         queueLength = getQueueLength()
         next_obs = makeMove(action, transition_time)
@@ -82,34 +128,50 @@ def run_episode(agent, env, rpm):
         new_queueLength = getQueueLength()
         reward = getReward(queueLength, new_queueLength)
         done = traci.simulation.getMinExpectedNumber()
-        # action = [action]  # 方便存入replaymemory
-        rpm.append((obs, action, REWARD_SCALE * reward, next_obs, done))
+        #action = [action]  # 方便存入replaymemory
+
+        same_action_count = 0
+        for temp in rpm.buffer:
+            print(np.argmax(temp[1]))
+            if np.argmax(temp[1]) == 0:
+                same_action_count += 1
+            else:
+                break
+        if same_action_count == 20:
+            act = [0 ,1]
+            print("SAME ACTION PENALTY")
+
+        else:
+            print("POLICY FOLLOWED ")
+
+
+        rpm.append((obs, act, REWARD_SCALE * reward, next_obs, done))
 
         if len(rpm) > MEMORY_WARMUP_SIZE:
             (batch_obs, batch_action, batch_reward, batch_next_obs,
              batch_done) = rpm.sample(BATCH_SIZE)
+
             agent.learn(batch_obs, batch_action, batch_reward, batch_next_obs,
                         batch_done)
 
         obs = next_obs
         total_reward += reward
 
-        if done:
-            break
     return total_reward, steps
 
 
 def evaluate(env, agent, render=False):
     eval_reward = []
     for i in range(5):
-
+        obs = getState_baseline(transition_time)
         total_reward = 0
         steps = 0
         while True:
-            obs = getState_baseline(transition_time)
 
-            action = agent.predict(obs.astype('float32'))
 
+            act = agent.predict(obs.astype('float32'))
+            action = np.argmax(act)
+            print("action:",action)
             steps += 1
 
             queueLength = getQueueLength()
@@ -129,12 +191,10 @@ def evaluate(env, agent, render=False):
 
 def main():
     # 创建环境
-
     traci.start([sumoBinary, "-c", "data/cross.sumocfg",
                  "--tripinfo-output", "tripinfo.xml"])
 
     traci.trafficlight.setPhase("0", 0)
-    np.random.seed(0)
 
     act_dim = 2
     obs_dim = 1440  # (10, 24, 6)
@@ -155,11 +215,13 @@ def main():
     rpm = ReplayMemory(MEMORY_SIZE)
     # 往经验池中预存数据
     while len(rpm) < MEMORY_WARMUP_SIZE:
+
         run_episode(agent, env, rpm)
 
     episode = 0
     while episode < TRAIN_EPISODE:
         for i in range(50):
+
             total_reward, steps = run_episode(agent, env, rpm)
             episode += 1
 
@@ -177,7 +239,7 @@ def main():
 if __name__ == '__main__':
     main()
 
-    print(AVG_Q_len_perepisode)
+    #print(AVG_Q_len_perepisode)
     # import matplotlib.pyplot as plt
     #
     # plt.plot([x for x in range(num_episode)], [AVG_Q_len_perepisode], 'ro')

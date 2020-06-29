@@ -29,7 +29,7 @@ class ActorModel(parl.Model):
         self.fc1 = layers.fc(size=hid_size1, act='relu')
         self.fc2 = layers.fc(size=hid_size2, act='relu')
         self.fc3 = layers.fc(size=hid_size3, act='relu')
-        self.fc4 = layers.fc(size=act_dim, act=None)
+        self.fc4 = layers.fc(size=act_dim, act='softmax')
 
     def policy(self, obs):
         #obs = self.conv2(obs)
@@ -50,7 +50,7 @@ class CriticModel(parl.Model):
         self.fc1 = layers.fc(size=hid_size1, act='relu')
         self.fc2 = layers.fc(size=hid_size2, act='relu')
         self.fc3 = layers.fc(size=hid_size3, act='relu')
-        self.fc4 = layers.fc(size=1, act=None)
+        self.fc4 = layers.fc(size=1, act='softmax')
 
     def value(self, obs, act):
         concat = layers.concat([obs, act], axis=1)

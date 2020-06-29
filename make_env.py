@@ -448,7 +448,7 @@ def getState_baseline(transition_time):
                                     1)
     phaseVector = getPhaseState_baseline()
     newState = np.dstack((positionVector, velocityVector, phaseVector))
-    newState = np.expand_dims(newState, axis=0).ravel()
+    newState = np.expand_dims(newState, axis=0).flatten()
 
     return newState
 
@@ -460,7 +460,7 @@ def getQueueLength():
     bottomcount = 0
     vehicleList = traci.vehicle.getIDList()
 
-    print("Traffic : ")
+    #print("Traffic : ")
 
     for id in vehicleList:
         x, y = traci.vehicle.getPosition(id)
@@ -477,10 +477,10 @@ def getQueueLength():
                     if x < 130 and x > 120 and y < 180 and y > 130:
                         topcount += 1
 
-    print("Left : ", leftcount)
-    print("Right : ", rightcount)
-    print("Top : ", topcount)
-    print("Bottom : ", bottomcount)
+    # print("Left : ", leftcount)
+    # print("Right : ", rightcount)
+    # print("Top : ", topcount)
+    # print("Bottom : ", bottomcount)
 
     # transition_time_step_bottomcount+= bottomcount
     # transition_time_step_leftcount+= leftcount
@@ -559,7 +559,7 @@ print("here")
 
 
 def makeMove(action, transition_time):
-    if action.any() == 1:
+    if action == 1:
         traci.trafficlight.setPhase("0", (int(traci.trafficlight.getPhase("0")) + 1) % 4)
 
     # traci.simulationStep()

@@ -74,7 +74,7 @@ def test(agent):
     num_cycles = 0
     num_qlength_instances = 0
     total_t = 0
-
+    sum_q_lens = 0
     while traci.simulation.getMinExpectedNumber() > 0:
 
         # print("Waiting time on lane 1i_0 = ",getWaitingTime("1i_0"))
