@@ -20,41 +20,6 @@ except ImportError:
 
 import traci
 
-ACTOR_LR = 1e-3  # Actor网络的 learning rate
-CRITIC_LR = 1e-3  # Critic网络的 learning rate
-
-GAMMA = 0.99  # reward 的衰减因子
-TAU = 0.001  # 软更新的系数
-MEMORY_SIZE = int(1e4)  # 经验池大小
-MEMORY_WARMUP_SIZE = MEMORY_SIZE // 20  # 预存一部分经验之后再开始训练
-BATCH_SIZE = 128
-REWARD_SCALE = 0.1  # reward 缩放系数
-NOISE = 1.05  # 动作噪声方差
-
-TRAIN_EPISODE = 10000  # 训练的总episode数
-
-num_episode = 16
-discount_factor = 0.9
-# epsilon = 1
-epsilon_start = 1
-epsilon_end = 0.4
-epsilon_decay_steps = 3000
-
-Average_Q_lengths = []
-
-params_dict = []  # for graph writing
-sum_q_lens = 0
-AVG_Q_len_perepisode = []
-
-transition_time = 8
-target_update_time = 20
-
-replay_memory_init_size = 350
-replay_memory_size = 8000
-batch_size = 32
-
-epsilons = np.linspace(epsilon_start, epsilon_end, epsilon_decay_steps)
-
 
 def get_options():
     optParser = optparse.OptionParser()
@@ -448,7 +413,7 @@ def getState_baseline(transition_time):
                                     1)
     phaseVector = getPhaseState_baseline()
     newState = np.dstack((positionVector, velocityVector, phaseVector))
-    newState = np.expand_dims(newState, axis=0).flatten()
+    newState = np.expand_dims(newState, axis=0)
 
     return newState
 

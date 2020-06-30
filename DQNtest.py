@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import parl
 from parl.utils import logger
 
-from paddle_DDPGmodel import Model
-from paddle_DDPGagent import Agent
+from DQN_model import Model
+from DQN_agent import Agent
 from replay_memory import ReplayMemory
 
 import os
@@ -18,24 +18,14 @@ from parl.algorithms import DDPG
 from make_test_env import *
 from operator import add
 
-num_episode = 1
-discount_factor = 0.9
-# epsilon = 1
-epsilon_start = 1
-epsilon_end = 0.01
-epsilon_decay_steps = 3000
 
-Average_Q_lengths = []
-
-params_dict = []  # for graph writing
-sum_q_lens = 0
-AVG_Q_len_perepisode = []
-
-transition_time = 8
-target_update_time = 20
-replay_memory_init_size = 150
-replay_memory_size = 8000
-batch_size = 32
+LEARN_FREQ = 5  # update parameters every 5 steps
+MEMORY_SIZE = 20000  # replay memory size
+MEMORY_WARMUP_SIZE = 200  # store some experiences in the replay memory in advance
+BATCH_SIZE = 32
+LEARNING_RATE = 0.005
+GAMMA = 0.99  # discount factor of reward
+TRAIN_EPISODE = 100  # 训练的总episode数
 
 epsilons = np.linspace(epsilon_start, epsilon_end, epsilon_decay_steps)
 
@@ -86,10 +76,10 @@ def test(agent):
         # batch_experience = experience[:batch_history]
         prev_phase = traci.trafficlight.getPhase("0")
 
-        action = agent.sample(obs)
+        action = agent.predict(obs.astype('float32'))
 
 
-
+        print("action:",action)
         # queueLength = getQueueLength()
         next_obs, qlength, avg_lane_qlength = makeMove(action, transition_time)
         new_phase = traci.trafficlight.getPhase("0")
@@ -194,7 +184,7 @@ if __name__ == '__main__':
     # 使用PARL框架创建agent
 
     model = Model(act_dim)
-    algorithm = DDPG(model, gamma=GAMMA, tau=TAU, actor_lr=ACTOR_LR, critic_lr=CRITIC_LR)
+    algorithm = parl.algorithms.DQN(model, act_dim=act_dim, gamma=GAMMA, lr=LEARNING_RATE)
     agent = Agent(algorithm, obs_dim, act_dim)
 
     # 加载模型

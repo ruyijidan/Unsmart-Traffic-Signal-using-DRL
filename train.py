@@ -120,34 +120,18 @@ def run_episode(agent, env, rpm):
 
         # action = np.random.normal(action, NOISE)
 
+        same_action_count = 0
+        for temp in reversed(rpm.buffer):
+            if temp[1] == 0:
+                same_action_count += 1
+            else:
+                break
+        if same_action_count == 20:
+            action = 1
+            print("SAME ACTION PENALTY")
 
-
-        # epsilon = epsilons[min(total_t, epsilon_decay_steps - 1)]
-        # print("Epsilon -", epsilon)
-        # policy_s = np.ones(nA) * epsilon / nA
-        #
-        # policy_s[np.argmax(obs)] = 1 - epsilon + (epsilon / nA)
-
-        #action = np.random.choice(np.arange(nA), p=policy_s)
-
-        # same_action_count = 0
-        # for temp in rpm.buffer:
-        #     print(np.argmax(temp[1]))
-        #     if np.argmax(temp[1]) == 0:
-        #         same_action_count += 1
-        #     else:
-        #         break
-        # if same_action_count == 20:
-        #     act[0] = 0
-        #     act[1] = 1
-        #     action = 1
-        #     print("SAME ACTION PENALTY")
-        #
-        # else:
-        #     print("POLICY FOLLOWED ")
-        # print("real_act:", act)
-        #
-        # print("real_action:", action)
+        else:
+            print("POLICY FOLLOWED ")
 
 
 
@@ -250,7 +234,7 @@ def main():
         logger.info('episode:{}    test_reward:{}'.format(
             episode, eval_reward))
 
-        save_path = './model/dqn_model_{}_{}.ckpt'.format(i, total_reward)
+        save_path = './model/model_{}_{}.ckpt'.format(i, total_reward)
         agent.save(save_path)
 
     # 保存模型到文件 ./model.ckpt

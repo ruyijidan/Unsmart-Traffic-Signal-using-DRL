@@ -27,6 +27,26 @@ export VREP_ROOT="$/home/j/program/CoppeliaSim_Edu_V4_0_0_Ubuntu18_04"
 
 
 
+DQN
+
+make_env.py===========>>>>>>>>>>创建环境
+
+DQNagent.py=====>>>>>>agent
+
+DQNmodel.py=====>>>>>>model
+
+replay_memory.py======>>>>>训练经验池
+
+DQNtrain.py=============>>>>>>>>>>>开始训练
+
+DQNtest.py=============>>>>>>>>>>>>测试打印
+
+DQN训练结果
+
+
+DDPG方法没搞好 = =#
+
+开始的完全不收敛,一直随机,后来改完训练一段时间绿灯保持在没车的路口了....
 
 make_env.py===========>>>>>>>>>>创建环境
 
@@ -39,4 +59,7 @@ replay_memory.py======>>>>>训练经验池
 train.py=============>>>>>>>>>>>开始训练
 
 test.py=============>>>>>>>>>>>>测试打印
+
+
+
 
