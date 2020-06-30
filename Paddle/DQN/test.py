@@ -3,12 +3,12 @@ import numpy as np
 import parl
 from parl.utils import logger
 
-from Paddle.paddle_model import Model
-from Paddle.paddle_agent import Agent
+from paddle_model import Model
+from paddle_agent import Agent
 
-from Paddle.replay_memory import ReplayMemory
+from replay_memory import ReplayMemory
 
-from Paddle.paddle_env import Paddle
+from paddle_env import Paddle
 
 
 LEARN_FREQ = 5 # 训练频率，不需要每一个step都learn，攒一些新增经验后再learn，提高效率
