@@ -111,7 +111,8 @@ def main():
         save_path = './dqn_model.ckpt'
         agent.restore(save_path)
         print("模型加载成功")
-
-
-
     eval_reward = evaluate(agent, penv)
+
+if __name__ == '__main__':
+
+    main()
